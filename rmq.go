@@ -49,7 +49,7 @@ func (rmq *rmq) getQueueInformation(queue string, vhost string, cooldown int32) 
 	client := &http.Client{}
 	var statsAge int32
 	statsAge = max(cooldown, 1)
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/api/queues/%s/%s?columns=messages,consumers,message_stats.publish_details&msg_rates_age=%d&msg_rates_incr=%d", rmq.URL, vhost, queue, statsAge, statsAge), nil)
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/api/queues/%s/%s?columns=messages,consumers,message_stats.publish_details&msg_rates_age=%d&msg_rates_incr=%d", rmq.URL, vhost, queue, statsAge*3, statsAge), nil)
 	if err != nil {
 		return 0, 0, 0, err
 	}
@@ -69,7 +69,7 @@ func (rmq *rmq) getQueueInformation(queue string, vhost string, cooldown int32) 
 	json.NewDecoder(resp.Body).Decode(&data)
 
 	var messagesPublished int32
-	if cooldown == 0 {
+	if cooldown == 0 || len(messagesPublished) < 2 {
 		messagesPublished = 0
 	} else {
 		messagesPublished = data.MessageStats.PublishDetails.Samples[0].Sample - data.MessageStats.PublishDetails.Samples[1].Sample
